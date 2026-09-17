@@ -1,0 +1,196 @@
+﻿linea,secuencia,estacion,es_correspondencia,lineas_conectadas,tiempo_medio_tramo_linea_min
+1,1,Observatorio,no,,2.368
+1,2,Tacubaya,si,"1,7,9",2.368
+1,3,Juanacatlán,no,,2.368
+1,4,Chapultepec,no,,2.368
+1,5,Sevilla,no,,2.368
+1,6,Insurgentes,no,,2.368
+1,7,Cuauhtémoc,no,,2.368
+1,8,Balderas,si,"1,3",2.368
+1,9,Salto del Agua,si,"1,8",2.368
+1,10,Isabel la Católica,no,,2.368
+1,11,Pino Suárez,si,"1,2",2.368
+1,12,Merced,no,,2.368
+1,13,Candelaria,si,"1,4",2.368
+1,14,San Lázaro,si,"1,B",2.368
+1,15,Moctezuma,no,,2.368
+1,16,Balbuena,no,,2.368
+1,17,Boulevard Puerto Aéreo,no,,2.368
+1,18,Gómez Farías,no,,2.368
+1,19,Zaragoza,no,,2.368
+1,20,Pantitlán,si,"1,5,9,A",2.368
+2,1,Cuatro Caminos,no,,2.391
+2,2,Panteones,no,,2.391
+2,3,Tacuba,si,"2,7",2.391
+2,4,Cuitláhuac,no,,2.391
+2,5,Popotla,no,,2.391
+2,6,Colegio Militar,no,,2.391
+2,7,Normal,no,,2.391
+2,8,San Cosme,no,,2.391
+2,9,Revolución,no,,2.391
+2,10,Hidalgo,si,"2,3",2.391
+2,11,Bellas Artes,si,"2,8",2.391
+2,12,Allende,no,,2.391
+2,13,Zócalo/Tenochtitlan,no,,2.391
+2,14,Pino Suárez,si,"1,2",2.391
+2,15,San Antonio Abad,no,,2.391
+2,16,Chabacano,si,"2,8,9",2.391
+2,17,Viaducto,no,,2.391
+2,18,Xola,no,,2.391
+2,19,Villa de Cortés,no,,2.391
+2,20,Nativitas,no,,2.391
+2,21,Portales,no,,2.391
+2,22,Ermita,si,"2,12",2.391
+2,23,General Anaya,no,,2.391
+2,24,Tasqueña,no,,2.391
+3,1,Indios Verdes,no,,2.8
+3,2,Deportivo 18 de Marzo,si,"3,6",2.8
+3,3,Potrero,no,,2.8
+3,4,La Raza,si,"3,5",2.8
+3,5,Tlatelolco,no,,2.8
+3,6,Guerrero,si,"3,B",2.8
+3,7,Hidalgo,si,"2,3",2.8
+3,8,Juárez,no,,2.8
+3,9,Balderas,si,"1,3",2.8
+3,10,Niños Héroes/Poder Judicial CDMX,no,,2.8
+3,11,Hospital General,no,,2.8
+3,12,Centro Médico,si,"3,9",2.8
+3,13,Etiopía/Plaza de la Transparencia,no,,2.8
+3,14,Eugenia,no,,2.8
+3,15,División del Norte,no,,2.8
+3,16,Zapata,si,"3,12",2.8
+3,17,Coyoacán,no,,2.8
+3,18,Viveros/Derechos Humanos,no,,2.8
+3,19,Miguel Ángel de Quevedo,no,,2.8
+3,20,Copilco,no,,2.8
+3,21,Universidad,no,,2.8
+4,1,Martín Carrera,si,"4,6",2.778
+4,2,Talismán,no,,2.778
+4,3,Bondojito,no,,2.778
+4,4,Consulado,si,"4,5",2.778
+4,5,Canal del Norte,no,,2.778
+4,6,Morelos,si,"4,B",2.778
+4,7,Candelaria,si,"1,4",2.778
+4,8,Fray Servando,no,,2.778
+4,9,Jamaica,si,"4,9",2.778
+4,10,Santa Anita,si,"4,8",2.778
+5,1,Pantitlán,si,"1,5,9,A",2.917
+5,2,Hangares,no,,2.917
+5,3,Terminal Aérea,no,,2.917
+5,4,Oceanía,si,"5,B",2.917
+5,5,Aragón,no,,2.917
+5,6,Eduardo Molina,no,,2.917
+5,7,Consulado,si,"4,5",2.917
+5,8,Valle Gómez,no,,2.917
+5,9,Misterios,no,,2.917
+5,10,La Raza,si,"3,5",2.917
+5,11,Autobuses del Norte,no,,2.917
+5,12,Instituto del Petróleo,si,"5,6",2.917
+5,13,Politécnico,no,,2.917
+6,1,El Rosario,si,"6,7",3.2
+6,2,Tezozómoc,no,,3.2
+6,3,UAM Azcapotzalco,no,,3.2
+6,4,Ferrería/Arena Ciudad de México,no,,3.2
+6,5,Norte 45,no,,3.2
+6,6,Vallejo,no,,3.2
+6,7,Instituto del Petróleo,si,"5,6",3.2
+6,8,Lindavista,no,,3.2
+6,9,Deportivo 18 de Marzo,si,"3,6",3.2
+6,10,La Villa/Basílica,no,,3.2
+6,11,Martín Carrera,si,"4,6",3.2
+7,1,El Rosario,si,"6,7",3.385
+7,2,Aquiles Serdán,no,,3.385
+7,3,Camarones,no,,3.385
+7,4,Refinería,no,,3.385
+7,5,Tacuba,si,"2,7",3.385
+7,6,San Joaquín,no,,3.385
+7,7,Polanco,no,,3.385
+7,8,Auditorio,no,,3.385
+7,9,Constituyentes,no,,3.385
+7,10,Tacubaya,si,"1,7,9",3.385
+7,11,San Pedro de los Pinos,no,,3.385
+7,12,San Antonio,no,,3.385
+7,13,Mixcoac,si,"7,12",3.385
+7,14,Barranca del Muerto,no,,3.385
+8,1,Garibaldi/Lagunilla,si,"8,B",2.778
+8,2,Bellas Artes,si,"2,8",2.778
+8,3,San Juan de Letrán,no,,2.778
+8,4,Salto del Agua,si,"1,8",2.778
+8,5,Doctores,no,,2.778
+8,6,Obrera,no,,2.778
+8,7,Chabacano,si,"2,8,9",2.778
+8,8,La Viga,no,,2.778
+8,9,Santa Anita,si,"4,8",2.778
+8,10,Coyuya,no,,2.778
+8,11,Iztacalco,no,,2.778
+8,12,Apatlaco,no,,2.778
+8,13,Aculco,no,,2.778
+8,14,Escuadrón 201,no,,2.778
+8,15,Atlalilco,si,"8,12",2.778
+8,16,Iztapalapa,no,,2.778
+8,17,Cerro de la Estrella,no,,2.778
+8,18,UAM-I,no,,2.778
+8,19,Constitución de 1917,no,,2.778
+9,1,Tacubaya,si,"1,7,9",3.273
+9,2,Patriotismo,no,,3.273
+9,3,Chilpancingo,no,,3.273
+9,4,Centro Médico,si,"3,9",3.273
+9,5,Lázaro Cárdenas,no,,3.273
+9,6,Chabacano,si,"2,8,9",3.273
+9,7,Jamaica,si,"4,9",3.273
+9,8,Mixiuhca,no,,3.273
+9,9,Velódromo,no,,3.273
+9,10,Ciudad Deportiva,no,,3.273
+9,11,Puebla,no,,3.273
+9,12,Pantitlán,si,"1,5,9,A",3.273
+A,1,Pantitlán,si,"1,5,9,A",3.333
+A,2,Agrícola Oriental,no,,3.333
+A,3,Canal de San Juan,no,,3.333
+A,4,Tepalcates,no,,3.333
+A,5,Guelatao,no,,3.333
+A,6,Peñón Viejo,no,,3.333
+A,7,Acatitla,no,,3.333
+A,8,Santa Marta,no,,3.333
+A,9,Los Reyes,no,,3.333
+A,10,La Paz,no,,3.333
+B,1,Ciudad Azteca,no,,2.05
+B,2,Plaza Aragón,no,,2.05
+B,3,Olímpica,no,,2.05
+B,4,Ecatepec,no,,2.05
+B,5,Múzquiz,no,,2.05
+B,6,Río de los Remedios,no,,2.05
+B,7,Impulsora,no,,2.05
+B,8,Nezahualcóyotl,no,,2.05
+B,9,Villa de Aragón,no,,2.05
+B,10,Bosque de Aragón,no,,2.05
+B,11,Deportivo Oceanía,no,,2.05
+B,12,Oceanía,si,"5,B",2.05
+B,13,Romero Rubio,no,,2.05
+B,14,Ricardo Flores Magón,no,,2.05
+B,15,San Lázaro,si,"1,B",2.05
+B,16,Morelos,si,"4,B",2.05
+B,17,Tepito,no,,2.05
+B,18,Lagunilla,no,,2.05
+B,19,Garibaldi/Lagunilla,si,"8,B",2.05
+B,20,Guerrero,si,"3,B",2.05
+B,21,Buenavista,no,,2.05
+12,1,Mixcoac,si,"7,12",2.211
+12,2,Insurgentes Sur,no,,2.211
+12,3,Hospital 20 de Noviembre,no,,2.211
+12,4,Zapata,si,"3,12",2.211
+12,5,Parque de los Venados,no,,2.211
+12,6,Eje Central,no,,2.211
+12,7,Ermita,si,"2,12",2.211
+12,8,Mexicaltzingo,no,,2.211
+12,9,Atlalilco,si,"8,12",2.211
+12,10,Culhuacán,no,,2.211
+12,11,San Andrés Tomatlán,no,,2.211
+12,12,Lomas Estrella,no,,2.211
+12,13,Calle 11,no,,2.211
+12,14,Periférico Oriente,no,,2.211
+12,15,Tezonco,no,,2.211
+12,16,Olivos,no,,2.211
+12,17,Nopalera,no,,2.211
+12,18,Zapotitlán,no,,2.211
+12,19,Tlaltenco,no,,2.211
+12,20,Tláhuac,no,,2.211
