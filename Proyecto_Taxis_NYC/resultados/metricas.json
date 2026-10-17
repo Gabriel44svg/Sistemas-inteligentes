@@ -1,0 +1,82 @@
+{
+  "modelo_seleccionado": "LightGBM profundo",
+  "componentes": [
+    [
+      "LightGBM profundo",
+      1.0
+    ]
+  ],
+  "validacion": {
+    "RMSLE": 0.37573547170152793,
+    "MAE_segundos": 282.3282818028928,
+    "RMSE_segundos": 3220.9216528272145,
+    "R2": 0.033752566035065934,
+    "MAPE_%": 24.735160440533843
+  },
+  "holdout": {
+    "RMSLE": 0.38121911358478955,
+    "MAE_segundos": 270.9153593820641,
+    "RMSE_segundos": 3062.549678590855,
+    "R2": 0.038993692644497036,
+    "MAPE_%": 25.475825099141886
+  },
+  "parametros_candidatos": {
+    "LightGBM equilibrado": {
+      "n_estimators": 1400,
+      "learning_rate": 0.045,
+      "num_leaves": 63,
+      "max_depth": -1,
+      "min_child_samples": 45,
+      "colsample_bytree": 0.87,
+      "subsample": 0.87,
+      "subsample_freq": 1,
+      "reg_lambda": 2.5,
+      "best_iteration_": 1400
+    },
+    "LightGBM profundo": {
+      "n_estimators": 1600,
+      "learning_rate": 0.045,
+      "num_leaves": 105,
+      "max_depth": -1,
+      "min_child_samples": 75,
+      "colsample_bytree": 0.92,
+      "subsample": 0.9,
+      "subsample_freq": 1,
+      "reg_lambda": 5,
+      "best_iteration_": 1598
+    },
+    "LightGBM regularizado": {
+      "n_estimators": 1650,
+      "learning_rate": 0.035,
+      "num_leaves": 39,
+      "max_depth": -1,
+      "min_child_samples": 75,
+      "colsample_bytree": 0.83,
+      "subsample": 0.88,
+      "subsample_freq": 1,
+      "reg_lambda": 6,
+      "best_iteration_": 1648
+    },
+    "XGBoost": {
+      "best_iteration": 1149,
+      "n_estimators": 1150,
+      "max_depth": 7,
+      "learning_rate": 0.047,
+      "min_child_weight": 9,
+      "subsample": 0.88,
+      "colsample_bytree": 0.87,
+      "reg_lambda": 6.0
+    },
+    "CatBoost": {
+      "best_iteration": 949,
+      "iterations": 950,
+      "depth": 8,
+      "learning_rate": 0.065,
+      "l2_leaf_reg": 5.0
+    }
+  },
+  "semilla": 42,
+  "observaciones_train": 559212,
+  "observaciones_validacion": 70000,
+  "observaciones_holdout": 70000
+}

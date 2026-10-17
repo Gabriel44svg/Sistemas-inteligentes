@@ -1,0 +1,714 @@
+% !TeX program = pdflatex
+% Compilar en Overleaf con pdfLaTeX. Las figuras se incluyen en la carpeta figuras/.
+% Proyecto de Sistemas Inteligentes - FES Acatlán, UNAM
+\documentclass[aspectratio=169,11pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noquoting]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\definecolor{UNAMnavy}{HTML}{14284F}
+\definecolor{UNAMdeep}{HTML}{0C1730}
+\definecolor{UNAMgold}{HTML}{D2B16A}
+\definecolor{UNAMteal}{HTML}{16858F}
+\definecolor{Pale}{HTML}{EDF3F8}
+\definecolor{Muted}{HTML}{496079}
+\definecolor{Good}{HTML}{16765A}
+\definecolor{Warning}{HTML}{B66B17}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+\setbeamercolor{structure}{fg=UNAMnavy}
+\setbeamercolor{frametitle}{bg=UNAMnavy,fg=white}
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{author in head/foot}{bg=UNAMnavy,fg=white}
+\setbeamercolor{date in head/foot}{bg=UNAMnavy,fg=white}
+\setbeamercolor{normal text}{fg=UNAMdeep,bg=white}
+\setbeamercolor{block title}{bg=UNAMnavy,fg=white}
+\setbeamercolor{block body}{bg=Pale,fg=UNAMdeep}
+\setbeamercolor{alerted text}{fg=Warning}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{\begin{beamercolorbox}[wd=.84\paperwidth,ht=2.5ex,dp=1ex,leftskip=1.2em]{author in head/foot}%
+    Sistemas Inteligentes $\vert$ Duración de viajes NYC
+  \end{beamercolorbox}\begin{beamercolorbox}[wd=.16\paperwidth,ht=2.5ex,dp=1ex,center]{date in head/foot}%
+    \insertframenumber / \inserttotalframenumber
+  \end{beamercolorbox}}}
+\setbeamersize{text margin left=9mm,text margin right=9mm}
+\setlength{\parskip}{2pt}
+\setlength{\tabcolsep}{4pt}
+\newcommand{\clav}[1]{\textcolor{UNAMteal}{\textbf{#1}}}
+\newcommand{\porq}[1]{\vspace{1.2mm}\begin{block}{¿Por qué se hizo así?}\small #1\end{block}}
+\newcommand{\grafico}[2]{\IfFileExists{figuras/#1}{\includegraphics[width=\linewidth,height=#2,keepaspectratio]{figuras/#1}}{\fbox{\parbox{.80\linewidth}{\centering Imagen opcional: figuras/#1}}}}
+\newcommand{\dato}[2]{\begin{block}{#1}\centering\Large\textbf{#2}\end{block}}
+\lstset{basicstyle=\ttfamily\footnotesize,backgroundcolor=\color{Pale},frame=single,rulecolor=\color{Pale},showstringspaces=false,breaklines=true,columns=fullflexible}
+\hypersetup{colorlinks=true,urlcolor=UNAMteal,linkcolor=UNAMnavy}
+
+\title[Predicción de viajes NYC]{Predicción de la duración de viajes\\de taxi en Nueva York}
+\subtitle{Limpieza, ingeniería de características y selección por RMSLE}
+\author{Christian Gabriel Villafuerte Aguilar}
+\institute{Sistemas Inteligentes \\ Licenciatura en Matemáticas Aplicadas y Computación \\ FES Acatlán -- UNAM}
+\date{Octubre de 2026}
+
+\begin{document}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \fill[UNAMnavy] (current page.south west) rectangle (current page.north east);
+  \fill[UNAMgold] ([yshift=-8mm]current page.north west) rectangle ([yshift=-10mm]current page.north east);
+  \node[align=center,text=white,font=\LARGE\bfseries,text width=.90\paperwidth]
+      at ([yshift=12mm]current page.center)
+      {Predicción de la duración\\de viajes de taxi en Nueva York};
+  \node[align=center,text=UNAMgold,font=\large,text width=.90\paperwidth]
+      at ([yshift=-6mm]current page.center)
+      {Del CSV a un modelo de regresión evaluado por RMSLE};
+  \draw[UNAMteal,line width=1.8pt]
+      ([xshift=19mm,yshift=24mm]current page.south west)--([xshift=-19mm,yshift=24mm]current page.south east);
+  \node[align=center,text=white,font=\normalsize]
+      at ([yshift=17mm]current page.south){Christian Gabriel Villafuerte Aguilar};
+  \node[align=center,text=white,font=\small]
+      at ([yshift=10mm]current page.south){Sistemas Inteligentes $\cdot$ MAC $\cdot$ FES Acatlán, UNAM};
+  \node[align=center,text=white,font=\small]
+      at ([yshift=4mm]current page.south){Octubre de 2026};
+\end{tikzpicture}
+\end{frame}
+
+\section{Comprensión del problema}
+\begin{frame}{Ruta de la exposición}
+\begin{enumerate}
+  \item Qué se quiere predecir y cuál es la métrica oficial.
+  \item Auditoría de datos, limpieza y partición correcta.
+  \item Construcción de \clav{81 variables} e imputación/escalado.
+  \item Comparación y ajuste de modelos de regresión.
+  \item Evaluación independiente, interpretación y entrega del CSV.
+\end{enumerate}
+\porq{El objetivo no es mostrar solamente un puntaje: se debe justificar un proceso reproducible y evitar fuga de información.}
+\end{frame}
+
+\begin{frame}{¿Cuál es el problema?}
+\begin{columns}[T]
+  \column{.57\textwidth}
+    \begin{itemize}
+      \item Entrada: datos de cada viaje de taxi amarillo.
+      \item Salida deseada: \texttt{trip\_duration}, en \textbf{segundos}.
+      \item Entrenamiento: \textbf{700,000} viajes con duración conocida.
+      \item Evaluación ciega: \textbf{100,000} viajes sin duración.
+      \item Entrega: un valor no negativo por cada \texttt{id}.
+    \end{itemize}
+  \column{.39\textwidth}
+    \dato{Tipo de aprendizaje}{Supervisado}
+    \dato{Tipo de tarea}{Regresión}
+\end{columns}
+\porq{La duración puede tomar muchos valores numéricos; no estamos decidiendo una clase ``corto/largo''. Por eso no corresponde usar un clasificador.}
+\end{frame}
+
+\begin{frame}{¿Por qué RMSLE y no accuracy o F1?}
+\begin{block}{Métrica oficial: Root Mean Squared Logarithmic Error}
+\[
+\mathrm{RMSLE}=\sqrt{\frac1n\sum_{i=1}^n\Big[\ln(1+\widehat y_i)-\ln(1+y_i)\Big]^2}.
+\]
+\end{block}
+\begin{columns}[T]
+\column{.48\textwidth}
+  \textbf{En regresión:} RMSLE, MAE, RMSE, $R^2$, MAPE.
+\column{.48\textwidth}
+  \textbf{En clasificación:} accuracy, precision, recall, F1.
+\end{columns}
+\vspace{2mm}
+\begin{itemize}
+  \item \clav{Menor RMSLE significa mejor resultado.}
+  \item La escala logarítmica da relevancia a los errores relativos.
+\end{itemize}
+\porq{Crear clases artificiales para calcular F1 cambiaría el problema y no optimizaría la evaluación del concurso.}
+\end{frame}
+
+\begin{frame}{Metodología de clase: ciclo de vida CRISP-DM}
+\centering
+\begin{tikzpicture}[>=Latex,node distance=3mm,every node/.style={font=\small}]
+\tikzset{etapa/.style={draw=UNAMnavy,thick,rounded corners=3pt,fill=Pale,minimum height=11mm,text width=22mm,align=center}}
+\node[etapa] (a) {Entender el\\ problema};
+\node[etapa,right=of a] (b) {Auditar\\ datos};
+\node[etapa,right=of b] (c) {Preparar\\ variables};
+\node[etapa,right=of c] (d) {Entrenar\\ modelos};
+\node[etapa,right=of d] (e) {Evaluar\\ resultados};
+\draw[->,very thick,UNAMteal] (a)--(b);
+\draw[->,very thick,UNAMteal] (b)--(c);
+\draw[->,very thick,UNAMteal] (c)--(d);
+\draw[->,very thick,UNAMteal] (d)--(e);
+\draw[->,UNAMgold,thick] (e.south) .. controls +(0,-13mm) and +(0,-13mm) .. node[below,font=\scriptsize]{revisar variables y repetir si hace falta} (c.south);
+\end{tikzpicture}
+\vspace{8mm}
+\begin{block}{Aplicación concreta en el notebook}
+CSV $\rightarrow$ auditoría $\rightarrow$ partición $\rightarrow$ 81 atributos $\rightarrow$ modelos $\rightarrow$ holdout $\rightarrow$ \texttt{submission.csv}.
+\end{block}
+\porq{Es el enfoque explicado en la presentación \emph{Ciclo de vida del ML}: antes del algoritmo van la calidad de datos y el planteamiento de la métrica.}
+\end{frame}
+
+\section{Datos y limpieza}
+\begin{frame}{¿Qué información contienen los archivos?}
+\small
+\begin{tabular}{p{.28\linewidth}p{.66\linewidth}}
+\toprule
+\textbf{Campo} & \textbf{Interpretación y uso}\tabularnewline\midrule
+\texttt{id} & Identificador: se conserva para entregar, no se entrena con él.\\
+\texttt{vendor\_id} & Empresa: se mantiene como variable numérica/código.\\
+\texttt{pickup\_datetime} & Fecha y hora de inicio: genera variables temporales.\\
+\texttt{passenger\_count} & Número declarado de pasajeros: contiene alguna anomalía.\\
+\texttt{pickup\_*}, \texttt{dropoff\_*} & Coordenadas de origen/destino: permiten calcular distancias.\\
+\texttt{store\_and\_fwd\_flag} & Conexión interrumpida (Y/N): se codifica 1/0.\\
+\texttt{trip\_duration} & Variable objetivo, solo en \texttt{train.csv}.\\
+\bottomrule
+\end{tabular}
+\porq{No se usa \texttt{id} como predictor porque es una etiqueta administrativa sin una relación física justificada con la duración.}
+\end{frame}
+
+\begin{frame}{Auditoría inicial: ¿los CSV están limpios?}
+\begin{columns}[T]
+\column{.5\textwidth}
+  \begin{itemize}
+    \item \textbf{0} valores nulos originales en \texttt{train} y \texttt{test}.
+    \item \textbf{0} IDs duplicados en ambos archivos.
+    \item \textbf{0} duraciones menores o iguales a cero.
+    \item \textbf{24} registros con cero pasajeros.
+  \end{itemize}
+\column{.46\textwidth}
+  \begin{itemize}
+    \item \textbf{984} duraciones mayores que 12 horas.
+    \item \textbf{2} duraciones mayores que 24 horas.
+    \item \textbf{32} orígenes fuera de caja GPS NYC.
+    \item \textbf{54} destinos fuera de esa caja.
+  \end{itemize}
+\end{columns}
+\porq{Que no haya nulos no significa que todos los registros sean plausibles. También se revisan consistencia temporal, GPS y valores extremos.}
+\end{frame}
+
+\begin{frame}{Exploración de datos: antes de modelar}
+\centering\grafico{01_exploracion.png}{.66\textheight}
+\vspace{1mm}
+{\footnotesize Distribución logarítmica de duración, número de viajes por hora y ubicaciones de origen.}
+\porq{La duración tiene una cola larga; una gráfica en segundos ocultaría gran parte de los viajes usuales. Las horas y ubicaciones justifican crear variables de contexto.}
+\end{frame}
+
+\begin{frame}{Decisiones explícitas sobre anomalías}
+\small
+\begin{tabular}{p{.25\linewidth}p{.40\linewidth}p{.28\linewidth}}
+\toprule
+\textbf{Caso} & \textbf{Acción aplicada} & \textbf{Motivo}\tabularnewline\midrule
+Viaje de más de 12 h & Se excluye \textbf{solo del ajuste}; no de validación ni holdout. & Reducir influencia de etiquetas extremas sin maquillar la evaluación.\\
+GPS fuera de zona & Se marca con indicador y se convierte su coordenada a NaN. & No calcular distancias absurdas.\\
+Cero pasajeros & Se marca con bandera de calidad; se conserva el dato. & Señal de calidad sin borrar el viaje.\\
+\texttt{test.csv} & \textbf{Nunca} se eliminan filas. & Deben existir 100,000 predicciones.\\
+\bottomrule
+\end{tabular}
+\porq{El umbral de 12 horas es una decisión heurística del experimento; conviene validarlo en estudios posteriores, no afirmar que es una regla universal.}
+\end{frame}
+
+\begin{frame}{División correcta: entrenamiento, validación y holdout}
+\centering
+\begin{tikzpicture}
+\fill[UNAMnavy] (0,0) rectangle (10.3,1.15);
+\fill[UNAMteal] (10.3,0) rectangle (11.6,1.15);
+\fill[UNAMgold] (11.6,0) rectangle (12.9,1.15);
+\node[white,font=\normalsize] at (5.1,.55){80\% $\rightarrow$ 560,000 viajes};
+\node[white,font=\scriptsize,align=center] at (10.95,.55){10\%\\70,000};
+\node[UNAMdeep,font=\scriptsize,align=center] at (12.25,.55){10\%\\70,000};
+\node[below] at (5.1,-.12){Entrenamiento};
+% Ambos grupos están identificados dentro de los bloques.
+\end{tikzpicture}
+\vspace{8mm}
+\begin{itemize}
+\item En los 560,000 de la partición de entrenamiento se filtraron 788 viajes $>12$ h: \clav{559,212 usados para ajustar}.
+\item Validación: compara modelos y parámetros.
+\item Holdout: se consulta una vez, tras la selección.
+\end{itemize}
+\porq{Si el holdout participa en el ajuste, deja de ser una evaluación independiente. Semilla fija: \texttt{random\_state=42}.}
+\end{frame}
+
+\section{Preparación y variables}
+\begin{frame}{Del dato crudo a una matriz numérica}
+\centering
+\begin{tikzpicture}[>=Latex,node distance=5mm,every node/.style={font=\scriptsize}]
+\tikzset{paso/.style={draw=UNAMnavy,fill=Pale,rounded corners,minimum width=22mm,minimum height=14mm,align=center}}
+\node[paso] (a) {CSV\\ original};
+\node[paso,right=of a] (b) {Fecha y GPS\\ consistentes};
+\node[paso,right=of b] (c) {81\ atributos\\ derivados};
+\node[paso,right=of c] (d) {Imputar\\ medianas};
+\node[paso,right=of d] (e) {Matriz\\ $X$};
+\foreach \x/\y in {a/b,b/c,c/d,d/e}{\draw[->,thick,UNAMteal] (\x)--(\y);}
+\end{tikzpicture}
+\vspace{8mm}
+\begin{block}{Propiedad importante}
+La función \texttt{create\_features} usa únicamente datos disponibles en los archivos de origen, \textbf{nunca la duración real} para construir predictores.
+\end{block}
+\porq{El modelo no comprende de forma automática que dos coordenadas implican una distancia o que las 23:00 y las 00:00 están muy próximas.}
+\end{frame}
+
+\begin{frame}{Las 81 características: ¿de dónde salen?}
+\footnotesize
+\begin{tabular}{p{.25\linewidth}p{.45\linewidth}p{.22\linewidth}}
+\toprule
+\textbf{Grupo} & \textbf{Ejemplos implementados} & \textbf{Qué aportan}\tabularnewline\midrule
+Tiempo & Hora, minuto, día, fin de semana, hora pico, seno/coseno & Congestión y periodicidad\\
+Geometría & Haversine, Manhattan aprox., $\Delta x$, $\Delta y$, rumbo & Longitud y dirección\\
+Zonas & Rejillas GPS, puntos medios & Barrios y trayectos frecuentes\\
+Referencias & Distancia a JFK, LGA, EWR, Times Square y otros & Contexto urbano\\
+Interacciones & Hora $\times$ distancia, hora pico $\times$ distancia & Relaciones no lineales\\
+Calidad & GPS inválido, pasajero inválido, conexión diferida & Anomalías del registro\\
+\bottomrule
+\end{tabular}
+\porq{Estas 81 columnas resultan de combinar conocimiento del dominio con transformaciones reproducibles; su cantidad no garantiza por sí sola calidad.}
+\end{frame}
+
+\begin{frame}{Variables temporales: ¿por qué usar seno y coseno?}
+\begin{columns}[T]
+\column{.52\textwidth}
+\[
+ h_{\sin}=\sin\left(\frac{2\pi h}{24}\right),\qquad
+ h_{\cos}=\cos\left(\frac{2\pi h}{24}\right).
+\]
+\begin{itemize}
+\item 23:00 y 00:00 son horas contiguas.
+\item Una hora numérica normal no refleja bien esa cercanía.
+\item También se aplican ciclos a días y meses.
+\end{itemize}
+\column{.44\textwidth}
+\centering
+\begin{tikzpicture}[scale=1.15]
+\draw[->,gray] (-1.35,0)--(1.35,0);
+\draw[->,gray] (0,-1.35)--(0,1.35);
+\draw[thick,UNAMnavy] (0,0) circle (1);
+\fill[UNAMteal] (1,0) circle (.07);
+\fill[UNAMgold] ({cos(-15)},{sin(-15)}) circle (.075);
+\node[font=\scriptsize,right] at (1,.12){00 h};
+\node[font=\scriptsize,right] at (0.84,-.37){23 h};
+\end{tikzpicture}
+\end{columns}
+\porq{La codificación cíclica hace que el cambio de día no aparezca como un salto artificial de 23 a 0.}
+\end{frame}
+
+\begin{frame}{¿Cómo calcular la distancia entre dos coordenadas?}
+\begin{block}{Fórmula de Haversine (distancia sobre la esfera terrestre)}
+\small
+\[
+\begin{aligned}
+ a&=\sin^2\!\left(\frac{\Delta\varphi}{2}\right)
+ +\cos\varphi_1\cos\varphi_2\sin^2\!\left(\frac{\Delta\lambda}{2}\right),\\[-1mm]
+ d&=2R\arcsin(\sqrt{a}), \qquad R\simeq 6371\,\mathrm{km}.
+\end{aligned}
+\]
+\end{block}
+\begin{itemize}
+\item $\varphi$: latitud; $\lambda$: longitud, en radianes.
+\item La distancia Haversine estima el trayecto directo, \textbf{no} las calles recorridas.
+\item Se añade distancia Manhattan aproximada para representar desplazamientos ortogonales.
+\end{itemize}
+\porq{Las coordenadas originales son difíciles de interpretar solas; las distancias aportan una relación más directa con el tiempo esperado.}
+\end{frame}
+
+\begin{frame}{Geografía urbana y relaciones entre variables}
+\begin{columns}[T]
+\column{.49\textwidth}
+\begin{block}{Origen / destino}
+\begin{itemize}
+\item Distancia a JFK, LaGuardia y Newark.
+\item Distancia a Times Square, Grand Central y Downtown.
+\item Celdas y punto medio de la trayectoria.
+\end{itemize}
+\end{block}
+\column{.49\textwidth}
+\begin{block}{Combinaciones}
+\begin{itemize}
+\item \texttt{hour\_x\_distance}.
+\item \texttt{rush\_x\_distance}.
+\item Ángulo del trayecto y sus seno/coseno.
+\item Distancias al cuadrado y logarítmicas.
+\end{itemize}
+\end{block}
+\end{columns}
+\porq{Un trayecto de 5 km durante hora pico puede durar distinto que el mismo trayecto por la madrugada; la interacción captura esa dependencia.}
+\end{frame}
+
+\begin{frame}{Imputación: ¿qué hacer cuando una coordenada es inválida?}
+\begin{enumerate}
+\item Detectar coordenadas fuera de una caja geográfica razonable.
+\item Crear bandera de calidad y sustituir la coordenada inválida por \texttt{NaN}.
+\item Aprender la \textbf{mediana de cada característica} usando \textbf{únicamente entrenamiento}.
+\item Aplicar las mismas medianas a validación, holdout y test.
+\end{enumerate}
+\begin{block}{Implementación real}
+\texttt{SimpleImputer(strategy='median', keep\_empty\_features=True)}
+\end{block}
+\porq{La mediana suele ser más resistente que la media a extremos. Si se calculase usando todo el conjunto, entrarían estadísticas de validación o prueba en el entrenamiento.}
+\end{frame}
+
+\begin{frame}{Normalización, escalado y logaritmo: NO son lo mismo}
+\small
+\begin{tabular}{p{.28\linewidth}p{.32\linewidth}p{.30\linewidth}}
+\toprule
+\textbf{Técnica} & \textbf{Expresión} & \textbf{¿Se usó?}\tabularnewline\midrule
+Estandarización & $(x-\mu)/\sigma$ & Se explica, pero no se aplicó a los árboles.\\
+Min--max & $(x-x_{\min})/(x_{\max}-x_{\min})$ & No se aplicó.\\
+Escalado robusto & $(x-\mathrm{mediana})/\mathrm{IQR}$ & \textbf{Sí: solo en Ridge}.\\
+Transformación del objetivo & $z=\ln(1+y)$ & \textbf{Sí: en todos los modelos}.\\
+\bottomrule
+\end{tabular}
+\vspace{2mm}
+\porq{Ridge penaliza coeficientes y necesita escalas comparables; los árboles separan por umbrales, así que no requieren escalado para funcionar.}
+\end{frame}
+
+\begin{frame}{Transformación de la duración para entrenar}
+\begin{columns}[T]
+\column{.52\textwidth}
+\begin{block}{Objetivo de entrenamiento}
+\[
+ z=\ln(1+\texttt{trip\_duration}).
+\]
+\end{block}
+\begin{block}{Recuperar segundos}
+\[
+ \widehat y=\max\{0,\exp(\widehat z)-1\}.
+\]
+\end{block}
+\column{.44\textwidth}
+\begin{itemize}
+\item Reduce la asimetría de la duración.
+\item Es consistente con la métrica RMSLE.
+\item Evita valores negativos en el archivo final.
+\item \textbf{No} significa que se entregue el logaritmo.
+\end{itemize}
+\end{columns}
+\porq{Se optimiza en la escala logarítmica y después se regresa a segundos, que es la unidad requerida por el reto.}
+\end{frame}
+
+\begin{frame}{¿Cómo se evitó la fuga de información?}
+\centering
+\begin{tikzpicture}[node distance=7mm,>=Latex,every node/.style={font=\small}]
+\node[draw=UNAMnavy,thick,fill=Pale,rounded corners,minimum width=41mm,minimum height=10mm] (tr) {Entrenamiento \texttt{tr\_fit}};
+\node[draw=UNAMteal,thick,fill=Pale,rounded corners,right=17mm of tr,minimum width=53mm,minimum height=10mm] (imp) {\texttt{imputer.fit(Xtr)}};
+\draw[->,thick,UNAMteal] (tr)--(imp);
+\node[draw=UNAMnavy,fill=white,below=5mm of tr,minimum width=41mm,minimum height=8mm] (va) {Validación / holdout / test};
+\node[draw=UNAMteal,fill=white,below=5mm of imp,minimum width=53mm,minimum height=8mm] (tx) {\texttt{imputer.transform(X)}};
+\draw[->,thick,UNAMteal] (va)--(tx);
+\draw[->,thick,UNAMgold] (imp)--(tx);
+\end{tikzpicture}
+\vspace{8mm}
+\begin{itemize}
+\item No se ajustan medianas ni \texttt{RobustScaler} con validación o test.
+\item No se calcula velocidad usando duración real ni se inventa hora de llegada.
+\item La evaluación holdout ocurre después de seleccionar el ganador.
+\end{itemize}
+\porq{Una métrica artificialmente baja por fuga de información no mide la capacidad real de generalizar.}
+\end{frame}
+
+\section{Modelado y selección}
+\begin{frame}{Primero: dos referencias fáciles de explicar}
+\begin{columns}[T]
+\column{.48\textwidth}
+\begin{block}{Modelo ingenuo: mediana}
+Predice para todos los viajes la mediana de la duración en escala logarítmica.
+\vspace{2mm}
+\centering\Large\textbf{RMSLE = 0.795413}
+\end{block}
+\column{.48\textwidth}
+\begin{block}{Ridge: regresión lineal}
+Modelo lineal con regularización $L_2$ y \texttt{RobustScaler}.
+\vspace{2mm}
+\centering\Large\textbf{RMSLE = 0.462847}
+\end{block}
+\end{columns}
+\porq{El baseline fija el mínimo que debemos superar; Ridge evalúa cuánto se puede explicar con una relación lineal regularizada.}
+\end{frame}
+
+\begin{frame}{¿Por qué Ridge en vez de quedarse con regresión lineal?}
+\begin{block}{Idea matemática}
+\[
+\widehat{\boldsymbol\beta}
+ =\arg\min_{\boldsymbol\beta}\left\{\sum_{i=1}^n(z_i-\beta_0-\mathbf x_i^\top\boldsymbol\beta)^2
+ +\alpha\lVert\boldsymbol\beta\rVert_2^2\right\},\qquad \alpha=100.
+\]
+\end{block}
+\begin{itemize}
+\item La penalización reduce coeficientes excesivamente grandes.
+\item Es útil con muchas variables correlacionadas.
+\item Se ajusta sobre atributos escalados de forma robusta.
+\item Pero tiene dificultades con interacciones no lineales complejas.
+\end{itemize}
+\porq{Ridge es una referencia interpretable y regularizada, no necesariamente el modelo final.}
+\end{frame}
+
+\begin{frame}{¿Por qué pasar a árboles de boosting?}
+\begin{columns}[T]
+\column{.51\textwidth}
+\begin{itemize}
+\item Distancia y duración no mantienen siempre relación lineal.
+\item Influyen hora, zona, aeropuerto y trayecto simultáneamente.
+\item \textbf{Boosting} añade árboles que corrigen errores anteriores.
+\item Puede capturar interacciones y cortes no lineales.
+\end{itemize}
+\column{.45\textwidth}
+\centering
+\begin{tikzpicture}[scale=.87,>=Latex]
+\node[draw=UNAMnavy,fill=Pale,rounded corners] (a) at (0,1.3){Árbol 1};
+\node[draw=UNAMnavy,fill=Pale,rounded corners] (b) at (2.2,1.3){Árbol 2};
+\node[draw=UNAMnavy,fill=Pale,rounded corners] (c) at (4.4,1.3){Árbol 3};
+\draw[->,thick,UNAMteal] (a)--(b);
+\draw[->,thick,UNAMteal] (b)--(c);
+\draw[->,thick,UNAMgold] (2.2,.8)--(2.2,0) node[below,font=\small,align=center]{suma gradual\\de correcciones};
+\end{tikzpicture}
+\end{columns}
+\porq{Los métodos de árboles trabajan con umbrales; por ello aquí no añadimos escalado de entrada que no aporta una ventaja clara.}
+\end{frame}
+
+\begin{frame}{Modelos probados y motivo de comparación}
+\footnotesize
+\begin{tabular}{p{.23\linewidth}p{.43\linewidth}p{.27\linewidth}}
+\toprule
+\textbf{Modelo} & \textbf{Idea} & \textbf{Motivo del ensayo}\tabularnewline\midrule
+LightGBM & Boosting eficiente con árboles orientados a hojas. & Eficiencia en datos tabulares grandes.\\
+XGBoost & Boosting regularizado con árboles. & Comparación con otra implementación sólida.\\
+CatBoost & Boosting con mecanismos de regularización propios. & Contrastar estabilidad y desempeño.\\
+\midrule
+Blends & Combinaciones ponderadas en escala log. & Comprobar si se complementan sus errores.\\
+\bottomrule
+\end{tabular}
+\porq{No se declaró ganador por popularidad: todos se compararon con el mismo conjunto de validación y la misma métrica.}
+\end{frame}
+
+\begin{frame}{¿Qué parámetros se ajustaron en LightGBM?}
+\scriptsize
+\begin{tabular}{p{.36\linewidth}rrr}
+\toprule
+\textbf{Hiperparámetro} & \textbf{Equilibrado} & \textbf{Profundo} & \textbf{Regularizado}\\\midrule
+\texttt{n\_estimators} & 1400 & 1600 & 1650\\
+\texttt{learning\_rate} & 0.045 & 0.045 & 0.035\\
+\texttt{num\_leaves} & 63 & 105 & 39\\
+\texttt{min\_child\_samples} & 45 & 75 & 75\\
+\texttt{colsample\_bytree} & 0.87 & 0.92 & 0.83\\
+\texttt{subsample} & 0.87 & 0.90 & 0.88\\
+\texttt{reg\_lambda} & 2.5 & 5 & 6\\\midrule
+\textbf{RMSLE de validación} & \textbf{0.379249} & \textbf{0.375735} & \textbf{0.382771}\\
+\bottomrule
+\end{tabular}
+\vspace{2mm}
+\begin{block}{Criterio aplicado}
+Entrenamiento sobre $\ln(1+y)$; evaluación por RMSLE; \emph{early stopping} con 90 rondas sin mejora para LightGBM.
+\end{block}
+\porq{Más hojas pueden capturar estructuras complejas, pero se controlan con mínimo de muestras por hoja y regularización. No se exploró todo el espacio de parámetros.}
+\end{frame}
+
+\begin{frame}{Resultados de validación: comparación objetiva}
+\begin{columns}[T]
+\column{.53\textwidth}
+\scriptsize
+\begin{tabular}{lr}
+\toprule Modelo & RMSLE $\downarrow$\\\midrule
+\textbf{LightGBM profundo} & \textbf{0.375735}\\
+LightGBM equilibrado & 0.379249\\
+XGBoost & 0.381371\\
+LightGBM regularizado & 0.382771\\
+CatBoost & 0.385040\\
+Ridge escalado & 0.462847\\
+Mediana & 0.795413\\
+\bottomrule
+\end{tabular}
+\par\vspace{3mm}
+\noindent\textbf{Ganador entre los modelos ensayados:} LightGBM profundo.
+\column{.43\textwidth}
+\begin{tikzpicture}
+\begin{axis}[xbar,xmin=0,xmax=.85,width=\linewidth,height=54mm,bar width=7pt,axis x line=bottom,axis y line=none,ytick=data,yticklabels={Mediana,Ridge,CatBoost,XGBoost,LightGBM},tick label style={font=\scriptsize},nodes near coords,point meta=explicit symbolic,every node near coord/.append style={font=\tiny,anchor=west},enlarge y limits=.14]
+\addplot[fill=UNAMteal,draw=UNAMteal] coordinates {(.7954,0) [.795] (.4628,1) [.463] (.3850,2) [.385] (.3814,3) [.381] (.3757,4) [.376]};
+\end{axis}
+\end{tikzpicture}
+\end{columns}
+\porq{El único criterio de selección fue minimizar RMSLE en la validación; valores menores indican mejores predicciones relativas.}
+\end{frame}
+
+\begin{frame}{¿Se intentó combinar modelos? Sí}
+\small
+\begin{tabular}{p{.75\linewidth}r}
+\toprule
+\textbf{Ensamble probado} & \textbf{RMSLE}\\\midrule
+75\% LightGBM profundo + 25\% LightGBM equilibrado & 0.375912\\
+50\% LightGBM profundo + 50\% LightGBM equilibrado & 0.376559\\
+25\% LightGBM profundo + 75\% LightGBM equilibrado & 0.377673\\
+50/30/20 (profundo / equilibrado / XGBoost) & 0.376475\\
+\midrule
+\textbf{LightGBM profundo sin mezcla} & \textbf{0.375735}\\\bottomrule
+\end{tabular}
+\vspace{2mm}
+\porq{Un ensamble no garantiza mejora. Como ninguno superó al modelo individual, el resultado final usa un solo LightGBM: mejor RMSLE y menor complejidad.}
+\end{frame}
+
+\section{Evaluación y entrega}
+\begin{frame}{Evaluación independiente: 70,000 viajes holdout}
+\begin{columns}[T]
+\column{.49\textwidth}
+\dato{RMSLE en validación}{0.375735}
+\column{.49\textwidth}
+\dato{RMSLE en holdout}{0.381219}
+\end{columns}
+\vspace{2mm}
+\begin{center}
+\small
+\begin{tabular}{ll}
+\toprule\textbf{Métrica complementaria en holdout} & \textbf{Valor}\\\midrule
+MAE & 270.92 segundos\\
+RMSE & 3,062.55 segundos\\
+$R^2$ & 0.0390\\
+MAPE & 25.48\%\\\bottomrule
+\end{tabular}
+\end{center}
+\porq{El holdout se mantuvo ajeno a la selección, por lo que su RMSLE es una estimación más honesta de generalización; no es el puntaje de test ciego.}
+\end{frame}
+
+\begin{frame}{Interpretación: RMSLE vs. MAE, RMSE y $R^2$}
+\small
+\begin{tabular}{p{.19\linewidth}p{.71\linewidth}}
+\toprule
+\textbf{Métrica} & \textbf{Qué nos dice}\tabularnewline\midrule
+RMSLE & Penaliza errores al comparar \textbf{log-duraciones}; es la métrica oficial.\\
+MAE & En promedio hay \textbf{270.92 s} de error absoluto en holdout (unos 4.5 min).\\
+RMSE & \textbf{3,062.55 s}; muy sensible a errores grandes en segundos.\\
+$R^2$ & \textbf{0.039}: el ajuste en escala de segundos explica poca varianza de estas etiquetas.\\
+MAPE & \textbf{25.48\%}, pero puede ser inestable cuando la duración real es pequeña.\\
+\bottomrule
+\end{tabular}
+\porq{El mismo modelo puede rendir bien en RMSLE y mal en RMSE/$R^2$: no son métricas intercambiables y los valores extremos influyen mucho en segundos.}
+\end{frame}
+
+\begin{frame}{Diagnóstico: ¿en qué casos se equivoca?}
+\centering\grafico{03_diagnostico_holdout.png}{.55\textheight}
+\vspace{1mm}
+{\footnotesize Predicción frente a valor real en logaritmos; distribución del error logarítmico.}
+\porq{Las dispersiones y sesgos ayudan a detectar sobreestimación, subestimación y viajes atípicos. Una sola métrica agregada no explica todos los fallos.}
+\end{frame}
+
+\begin{frame}{Importancia de variables según LightGBM}
+\begin{columns}[T]
+\column{.54\textwidth}
+\centering\grafico{04_importancia_variables.png}{.61\textheight}
+\column{.43\textwidth}
+\small
+\begin{itemize}
+\item Distancia a \textbf{JFK} desde el origen.
+\item Componentes cíclicas de la \textbf{hora}.
+\item \textbf{Día del año}.
+\item Distancia a JFK desde destino.
+\item \textbf{Hora $\times$ distancia}.
+\item \textbf{Distancia Haversine}.
+\end{itemize}
+\end{columns}
+\porq{Es una importancia interna del árbol (cantidad de uso de variables en cortes), no demuestra causalidad ni ordena necesariamente el efecto real de cada característica.}
+\end{frame}
+
+\begin{frame}{El error depende de la distancia del trayecto}
+\small
+\begin{tabular}{lrr}
+\toprule\textbf{Distancia Haversine} & \textbf{Viajes holdout} & \textbf{RMSLE}\\\midrule
+Menos de 0.5 km & 2,504 & 1.103559\\
+0.5 a 2 km & 31,070 & 0.368468\\
+2 a 5 km & 23,896 & 0.290010\\
+5 a 10 km & 8,250 & 0.260631\\
+10 a 25 km & 4,200 & 0.275809\\
+Más de 25 km & 76 & 0.245508\\\bottomrule
+\end{tabular}
+\vspace{1mm}
+{\scriptsize Nota: cuatro viajes holdout no entran en estos rangos por GPS inválido.}\par
+\vspace{1mm}
+\porq{En viajes muy cortos, paradas, espera y registros de GPS pueden dominar el tiempo; algunos grupos tienen pocas observaciones. Se trata de un diagnóstico, no de una prueba causal.}
+\end{frame}
+
+\begin{frame}{Entrenamiento final, ahora sí con todos los datos utilizables}
+\begin{enumerate}
+\item Se seleccionó LightGBM profundo usando \textbf{solo validación}.
+\item Se verificó su desempeño en \textbf{holdout}.
+\item Se volvió a entrenar con \textbf{699,016 viajes etiquetados}, aplicando el filtro $1\leq y\leq 43,200$ s.
+\item Se calcularon de nuevo medianas con ese entrenamiento completo.
+\item Se guardó el modelo: \texttt{modelos/modelo\_final.joblib}.
+\end{enumerate}
+\porq{Después de cerrar la evaluación, tiene sentido aprovechar más ejemplos etiquetados. El modelo final ya no tiene un holdout propio medido con esos pesos nuevos.}
+\end{frame}
+
+\begin{frame}[fragile]{Generación y verificación del archivo de entrega}
+\begin{columns}[T]
+\column{.49\textwidth}
+\textbf{Formato exigido:}
+\begin{lstlisting}
+id,trip_duration
+id_00001,650.79453
+id_00002,412.00000
+...
+\end{lstlisting}
+\footnotesize Los números anteriores son \textbf{ilustrativos del formato}, no filas copiadas de la entrega.
+\column{.47\textwidth}
+\textbf{Comprobaciones programadas:}
+\begin{itemize}\small
+\item \textbf{100,000} registros.
+\item Columnas exactas y en orden.
+\item Cada \texttt{id} aparece una sola vez.
+\item Mismo orden que \texttt{test.csv}.
+\item Segundos numéricos, finitos y $\geq 0$.
+\end{itemize}
+\end{columns}
+\porq{No basta con entrenar bien: un CSV con IDs omitidos, columnas de más o valores negativos sería una entrega incorrecta.}
+\end{frame}
+
+\begin{frame}{Conclusiones principales}
+\begin{enumerate}
+\item El problema es \textbf{regresión}, por lo que el objetivo correcto es \textbf{minimizar RMSLE}.
+\item La auditoría detectó duraciones extremas y coordenadas GPS incoherentes.
+\item La creación de \textbf{81 variables} permite traducir contexto temporal y geográfico a números.
+\item \textbf{Ridge se escaló}; los modelos de árbol \textbf{no necesitaron escalado}.
+\item LightGBM profundo ganó entre los candidatos: \clav{0.375735 en validación} y \clav{0.381219 en holdout}.
+\item El archivo \texttt{submission.csv} tiene las 100,000 predicciones requeridas.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Limitaciones y trabajo futuro}
+\begin{itemize}
+\item No conocemos la duración real del \textbf{test ciego}: no podemos asegurar su RMSLE.
+\item El \textbf{RMSLE de holdout} es una estimación, no una garantía de puntaje.
+\item El umbral de \textbf{12 horas} es una decisión a contrastar con otras estrategias.
+\item No se dispone aquí de tráfico real, accidentes, clima o rutas de calles.
+\item Podrían probarse \textbf{validación temporal}, optimización más amplia de hiperparámetros y variables de tránsito; habría que volver a evaluar sin fuga.
+\end{itemize}
+\porq{``Mejor modelo'' significa \textbf{el mejor entre los ensayados}, no una demostración de óptimo global.}
+\end{frame}
+
+\begin{frame}{Preguntas que pueden hacer en clase}
+\small
+\begin{enumerate}
+\item \textbf{¿Por qué no F1 o accuracy?} Porque se predicen segundos continuos.
+\item \textbf{¿Por qué el logaritmo?} Por cola larga y por coherencia con RMSLE.
+\item \textbf{¿Por qué no escalaste LightGBM?} Porque las particiones por umbrales no dependen de esa escala.
+\item \textbf{¿Por qué filtrar $>12$ h solo en train?} Para limitar ruido sin ocultarlo en evaluación.
+\item \textbf{¿Por qué LightGBM y no XGBoost?} Tuvo menor RMSLE de validación en estos experimentos.
+\item \textbf{¿Conoces el puntaje de test?} No; carece de etiquetas de duración.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Fuentes y archivos para reproducir}
+\small
+\begin{itemize}
+\item \emph{U5 - 01 - ML.pdf}: aprendizaje supervisado; regresión vs. clasificación (p. 7).
+\item \emph{U5 - 02 - Perceptrón.pdf}: regresión lineal, función de costo, descenso de gradiente (pp. 3--7).
+\item \emph{03 - Ciclo de vida del ML.pdf}: CRISP-DM, calidad, partición, fuga, imputación, escalado y métricas (pp. 2--5, 8--15, 19--24).
+\item \texttt{Prediccion\_Taxis\_NYC\_Paso\_a\_Paso.ipynb}: ejecución y decisiones exactas.
+\item \texttt{resultados/metricas.json}, \texttt{comparacion\_modelos.csv} y gráficas: evidencia experimental.
+\end{itemize}
+\vspace{2mm}
+\begin{center}\Large\textbf{¡Gracias!}\end{center}
+\end{frame}
+
+\end{document}
