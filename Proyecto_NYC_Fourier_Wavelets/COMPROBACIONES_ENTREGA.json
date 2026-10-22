@@ -1,0 +1,15 @@
+{
+  "entrenamiento_original": 700000,
+  "test_original": 100000,
+  "filas_finales_train": 699016,
+  "predicciones": 100000,
+  "columnas": [
+    "id",
+    "trip_duration"
+  ],
+  "ids_coinciden_en_orden": true,
+  "rmsle_validacion": 0.3738000756174008,
+  "rmsle_holdout": 0.37858959799891406,
+  "fuente": "resultados_wavelet/holdout_final.json y meta_final_wavelet.json",
+  "nota": "El puntaje 0.3704 corresponde a otro envío según usuario; no ha sido verificado aquí."
+}

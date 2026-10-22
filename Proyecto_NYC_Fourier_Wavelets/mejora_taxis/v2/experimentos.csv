@@ -1,0 +1,10 @@
+modelo,rmsle_validacion,mejor_iteracion,n_features,segundos
+blend_referencia_81_rotacion_mas_oof_0.5,0.3746240172258088,0,114,
+blend_referencia_81_rotacion_urbana_0.5,0.37470096199477143,0,114,
+blend_referencia_81_rotacion_mas_oof_0.75,0.37474169506199184,0,114,
+blend_referencia_81_rotacion_urbana_0.25,0.37484997556060196,0,114,
+blend_referencia_81_rotacion_urbana_0.75,0.3750174327013553,0,114,
+blend_referencia_81_rotacion_mas_oof_0.25,0.37544606097482713,0,114,
+rotacion_urbana,0.3754639191771238,1600,96,197.1
+referencia_81,0.37579821168827976,1600,81,102.4
+rotacion_mas_oof,0.3772016824926243,1600,104,310.1

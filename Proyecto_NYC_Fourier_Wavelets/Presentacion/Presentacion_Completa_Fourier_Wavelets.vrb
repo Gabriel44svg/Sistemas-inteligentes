@@ -1,0 +1,16 @@
+\frametitle{Verificación del CSV entregable}
+\small
+Formato requerido, \textbf{sin columnas auxiliares}:
+\begin{lstlisting}[language=Python,basicstyle=\ttfamily\scriptsize]
+submission = pd.DataFrame({
+    'id': test['id'], 'trip_duration': pred
+})
+assert submission.columns.tolist() == ['id','trip_duration']
+assert len(submission) == 100_000
+assert submission['id'].is_unique
+assert submission['id'].equals(test['id'])
+assert np.isfinite(submission['trip_duration']).all()
+assert (submission['trip_duration'] >= 0).all()
+submission.to_csv('submission_wavelet_fft.csv', index=False)
+\end{lstlisting}
+\porq{La calidad de un modelo también depende de que el archivo final cumpla exactamente las condiciones técnicas de la evaluación.}

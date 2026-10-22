@@ -1,0 +1,72 @@
+{
+  "ganador": {
+    "modelo": "blend_referencia_81_rotacion_mas_oof_0.5",
+    "rmsle_validacion": 0.3746240172258088,
+    "mejor_iteracion": 0,
+    "n_features": 114
+  },
+  "holdout_rmsle": 0.37928817537192905,
+  "resultados": [
+    {
+      "modelo": "referencia_81",
+      "rmsle_validacion": 0.37579821168827976,
+      "mejor_iteracion": 1600,
+      "n_features": 81,
+      "segundos": 102.4
+    },
+    {
+      "modelo": "rotacion_urbana",
+      "rmsle_validacion": 0.3754639191771238,
+      "mejor_iteracion": 1600,
+      "n_features": 96,
+      "segundos": 197.1
+    },
+    {
+      "modelo": "rotacion_mas_oof",
+      "rmsle_validacion": 0.3772016824926243,
+      "mejor_iteracion": 1600,
+      "n_features": 104,
+      "segundos": 310.1
+    },
+    {
+      "modelo": "blend_referencia_81_rotacion_urbana_0.25",
+      "rmsle_validacion": 0.37484997556060196,
+      "mejor_iteracion": 0,
+      "n_features": 114
+    },
+    {
+      "modelo": "blend_referencia_81_rotacion_urbana_0.5",
+      "rmsle_validacion": 0.37470096199477143,
+      "mejor_iteracion": 0,
+      "n_features": 114
+    },
+    {
+      "modelo": "blend_referencia_81_rotacion_urbana_0.75",
+      "rmsle_validacion": 0.3750174327013553,
+      "mejor_iteracion": 0,
+      "n_features": 114
+    },
+    {
+      "modelo": "blend_referencia_81_rotacion_mas_oof_0.25",
+      "rmsle_validacion": 0.37544606097482713,
+      "mejor_iteracion": 0,
+      "n_features": 114
+    },
+    {
+      "modelo": "blend_referencia_81_rotacion_mas_oof_0.5",
+      "rmsle_validacion": 0.3746240172258088,
+      "mejor_iteracion": 0,
+      "n_features": 114
+    },
+    {
+      "modelo": "blend_referencia_81_rotacion_mas_oof_0.75",
+      "rmsle_validacion": 0.37474169506199184,
+      "mejor_iteracion": 0,
+      "n_features": 114
+    }
+  ],
+  "train_n": 559212,
+  "valid_n": 70000,
+  "holdout_n": 70000,
+  "semilla": 42
+}

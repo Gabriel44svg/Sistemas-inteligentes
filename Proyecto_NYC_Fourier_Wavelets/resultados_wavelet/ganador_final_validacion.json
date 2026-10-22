@@ -1,0 +1,12 @@
+{
+  "mejor": {
+    "modelo": "ensemble_previo_0.75_con_Fourier_demanda_target_OOF",
+    "rmsle_validacion": 0.3738000756174008,
+    "best_iteration": 0,
+    "n_variables": 0,
+    "segundos": NaN
+  },
+  "rmsle_antes": 0.3746240172258088,
+  "metrica": "RMSLE",
+  "regla": "Seleccion exclusiva con validacion; holdout no consultado"
+}

@@ -1,0 +1,326 @@
+% !TeX program = pdflatex
+\documentclass[11pt,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noquoting]{babel}
+\usepackage{lmodern,amsmath,amssymb}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\definecolor{azul}{HTML}{14284F}
+\definecolor{verde}{HTML}{16858F}
+\hypersetup{colorlinks=true,urlcolor=verde}
+\pagestyle{fancy}\fancyhf{}\lhead{Guion completo --- NYC Fourier y Haar}\rhead{Sistemas Inteligentes}\cfoot{\thepage}
+\setlength{\headheight}{14pt}
+\newcommand{\lamina}[2]{\subsection*{Diapositiva #1. #2}}
+\newcommand{\explica}[1]{\noindent\textcolor{azul}{\textbf{Qué decir:}} #1\par\smallskip}
+\newcommand{\defiende}[1]{\noindent\textcolor{verde}{\textbf{Justificación / posible pregunta:}} #1\par\medskip}
+\title{Guion completo para presentar y defender el proyecto\\[3mm]\large Desde limpieza y modelos hasta Fourier y wavelets Haar}
+\author{Christian Gabriel Villafuerte Aguilar\\Sistemas Inteligentes -- Matemáticas Aplicadas y Computación\\FES Acatlán -- UNAM}
+\date{Octubre de 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Este guion acompaña a \texttt{Presentacion\_Completa\_Fourier\_Wavelets.tex}. Ofrece una explicación oral con las \emph{razones} de las decisiones, las cifras obtenidas en el notebook y respuestas a preguntas comunes. Se basa en los archivos de entrenamiento y prueba, en el notebook ejecutado y en las tres presentaciones de la asignatura. La métrica objetivo es \textbf{RMSLE}; no se calculan F1, precision, recall ni accuracy porque el problema es de regresión.
+\end{abstract}
+
+\section*{Recomendación para hablar en clase}
+Se incluyen 62 diapositivas para una exposición completa de 35--50 minutos. En 20 minutos resume las 6--19, 32--35 y 36--49, y enfócate en las 50--56 para la comparación. El guion es más amplio que lo necesario para leerlo de forma literal. Explica los resultados como \emph{comparación de experimentos}, no como garantía de obtener el mejor puntaje posible en los datos ciegos. Puedes omitir alguna ecuación en voz alta y centrarte en su interpretación física.
+
+\section{Planteamiento, objetivo y metodología}
+\lamina{1}{Portada}
+\explica{En este proyecto se utilizó aprendizaje automático para estimar cuántos segundos dura un trayecto de taxi amarillo en Nueva York. Partimos de datos reales tabulares, aplicamos limpieza y construimos variables útiles a partir de la fecha y las coordenadas. Entrenamos varios modelos y elegimos el que redujo más el error oficial del ejercicio.}
+\defiende{Aclara desde el inicio que el trabajo no consiste en adivinar clases como ``rápido'' o ``lento'', sino producir una cantidad numérica de segundos.}
+
+\lamina{2}{Ruta de la exposición}
+\explica{La explicación se organiza como lo hicimos en el notebook: entender el reto, examinar los datos, dividirlos, transformarlos, entrenar alternativas y evaluar. Esto evita presentar un número final sin mostrar de dónde salió.}
+\defiende{El orden importa: las transformaciones que se aprenden de los datos deben ajustarse después de separar validación y holdout.}
+
+\lamina{3}{Cuál es el problema}
+\explica{El archivo de entrenamiento tiene 700 mil filas y sí conoce la duración del viaje. El archivo de prueba tiene 100 mil filas y no tiene la variable objetivo. A partir de la información disponible, hay que producir una predicción de duración para cada viaje, sin omitir identificadores. Esta tarea es aprendizaje supervisado de regresión porque aprende de ejemplos con una respuesta numérica conocida.}
+\defiende{El identificador no contiene una magnitud del movimiento y se conserva para la entrega, no se utiliza como predictor.}
+
+\lamina{4}{Por qué RMSLE y no F1}
+\explica{La evaluación pide el Root Mean Squared Logarithmic Error. Primero sumamos uno a las duraciones reales y estimadas, aplicamos logaritmo, restamos, elevamos al cuadrado, promediamos y tomamos raíz. El logaritmo hace que importen las diferencias relativas y reduce el dominio de los tiempos extremos. A menor RMSLE, mejor desempeño. Accuracy, precision, recall y F1 requieren clases discretas y no corresponden directamente a este reto.}
+\defiende{Si preguntan ``¿por qué no reportaste F1?'', responde: para calcularlo tendríamos que transformar los segundos a clases y estaríamos resolviendo otro problema, con una métrica distinta de la requerida.}
+
+\lamina{5}{Ciclo de vida CRISP-DM}
+\explica{Seguimos la metodología vista en clase: plantear el problema, inspeccionar los datos, preparar las variables, entrenar, evaluar y entregar. El proceso puede regresar a etapas anteriores; por ejemplo, al notar que faltaba una relación entre distancia y hora creamos una nueva variable.}
+\defiende{El algoritmo es solamente una etapa. La confiabilidad del resultado también depende de la auditoría, el control de fugas y una evaluación honesta.}
+
+\section{Auditoría, exploración y separación de conjuntos}
+\lamina{6}{Estructura de los datos}
+\explica{Leímos los CSV con pandas y analizamos tipos y significado de columnas. La hora de salida y las coordenadas permiten construir variables causales plausibles. La empresa y la bandera de conexión se conservan como atributos numéricos; la duración es la etiqueta que se aprende. El ID solamente se utiliza para enlazar la predicción con el viaje original.}
+\defiende{No existe la hora de llegada en estos campos. Incluirla, o calcular velocidad dividiendo distancia entre la duración real, sería utilizar la respuesta al crear el predictor.}
+
+\lamina{7}{Auditoría de calidad}
+\explica{Comprobamos filas, nulos, duplicados y rangos. En los archivos originales no había nulos, IDs repetidos ni duraciones no positivas. Sin embargo, sí encontramos 984 duraciones mayores de doce horas, dos mayores a un día, 24 viajes que dicen tener cero pasajeros y algunos GPS fuera de la caja de Nueva York: 32 orígenes y 54 destinos.}
+\defiende{Un CSV sin celdas vacías no equivale a un conjunto limpio. Los valores pueden existir y aun así ser incoherentes.}
+
+\lamina{8}{Exploración gráfica}
+\explica{La primera gráfica usa el logaritmo de la duración porque una cola de valores excepcionalmente grandes aplasta la distribución en escala de segundos. El conteo por horas muestra que los viajes no se distribuyen de manera uniforme durante el día. La nube de coordenadas muestra la concentración geográfica de los puntos de salida. Estas observaciones justificaron el trabajo con horario y distancias.}
+\defiende{Los gráficos no prueban relaciones causales, pero orientan la creación y revisión de variables.}
+
+\lamina{9}{Tratamiento de anomalías}
+\explica{Los registros con duración mayor a doce horas se excluyeron solamente de los datos usados para ajustar el modelo. En cambio, se mantuvieron en validación y holdout: de esta forma no se ocultó que son difíciles de predecir. En coordenadas fuera de un rectángulo geográfico razonable se creó un indicador y se transformó el valor a ausente, para después imputarlo. Para cero pasajeros no borramos la fila, sino que añadimos una bandera de anomalía. En test jamás eliminamos filas.}
+\defiende{El límite de doce horas es heurístico. No afirmamos que todos esos viajes sean falsos, sino que su posible ruido puede dominar el aprendizaje. Es una decisión que convendría estudiar con análisis de sensibilidad.}
+
+\lamina{10}{Partición 80--10--10}
+\explica{Hicimos una separación aleatoria con semilla 42: 560 mil filas inicialmente para entrenamiento, 70 mil para validar modelos y 70 mil para la evaluación final independiente. Dentro de la partición de entrenamiento se excluyeron 788 duraciones mayores de doce horas, dejando 559,212 observaciones para ajustar. El conjunto ciego de cien mil viajes nunca se usó para medir errores o ajustar parámetros.}
+\defiende{La validación sirvió para elegir configuraciones y el holdout se revisó una vez al cerrar la selección. Si se revisara y ajustara repetidamente, dejaría de ser prueba independiente.}
+
+\section{Ingeniería de características, imputación y escalado}
+\lamina{11}{Flujo de transformación}
+\explica{La función de procesamiento parte de cada registro original, convierte las fechas y revisa las coordenadas, calcula 81 variables y después imputa sus valores faltantes. Cada columna queda numérica para que los algoritmos puedan procesarla. Esta secuencia se implementó de forma reproducible y se aplicó igual a entrenamiento, validación, holdout y prueba ciega.}
+\defiende{Una columna no debe derivarse usando la variable objetivo. Solo debe depender de información que también exista cuando llega una fila nueva.}
+
+\lamina{12}{Las 81 variables}
+\explica{No multiplicamos columnas sin criterio. Las variables se agruparon en tiempo, geometría, ubicación, puntos importantes de la ciudad, interacciones y calidad de datos. Por ejemplo, una latitud y longitud aisladas no dicen cuánto se desplazó el taxi: la distancia Haversine sí aporta una magnitud fácil de asociar con el tiempo. La hora punta da contexto de congestión.}
+\defiende{El número 81 es la dimensión de la matriz de entrada que reporta el notebook. Más variables no siempre significan mejor resultado, pero las propuestas tenían una interpretación concreta.}
+
+\lamina{13}{Variables temporales cíclicas}
+\explica{Una hora representada solo como 23 y otra como cero parecen extremadamente separadas numéricamente, aunque están a una hora de diferencia. Por eso transformamos la hora mediante seno y coseno, con periodo de 24 horas. Ambas variables representan puntos sobre un círculo y conservan la cercanía alrededor de medianoche. También hicimos transformaciones cíclicas para días y periodos del año.}
+\defiende{El par seno/coseno es preferible a usar solo uno porque conserva la posición de cada hora en el ciclo.}
+
+\lamina{14}{Distancia Haversine}
+\explica{Tomamos latitud y longitud de origen y destino y las transformamos a radianes. La fórmula de Haversine estima la distancia mínima sobre la superficie terrestre usando un radio terrestre aproximado de 6371 kilómetros. Esta distancia no es la ruta exacta por avenidas, por lo que añadimos otras aproximaciones como el desplazamiento Manhattan.}
+\defiende{Con los archivos entregados no hay calles transitadas ni itinerarios reales. Por eso hablamos de estimaciones geométricas, no de kilómetros recorridos por el vehículo.}
+
+\lamina{15}{Ubicación e interacciones}
+\explica{Incorporamos las distancias desde el origen y destino a zonas como JFK, LaGuardia, Newark, Times Square, Grand Central y Downtown, además de celdas geográficas. También creamos multiplicaciones entre distancia y hora, o distancia y hora pico. La justificación es que un trayecto con igual longitud puede durar distinto según la franja horaria y la zona.}
+\defiende{Las coordenadas de esos puntos son referencias geográficas disponibles públicamente; no se obtuvieron del tiempo de llegada real de cada viaje.}
+
+\lamina{16}{Imputación con mediana}
+\explica{Después de marcar algunos GPS como inválidos, pueden aparecer NaN en las variables espaciales. Ajustamos \texttt{SimpleImputer} con estrategia mediana exclusivamente sobre las filas de entrenamiento que realmente usamos. La mediana se calcula por columna y luego se aplica como un valor fijo a los otros subconjuntos.}
+\defiende{La mediana es menos sensible a extremos que la media y evita usar datos de validación para estimar parámetros de preparación.}
+
+\lamina{17}{Escalado y normalización: distinguir conceptos}
+\explica{En clase vimos estandarización, min--max y escalado robusto. En este experimento usamos específicamente \texttt{RobustScaler} para la regresión Ridge. Este método resta la mediana y divide entre el rango intercuartílico, lo que ayuda cuando las variables tienen unidades y rangos muy diferentes. No aplicamos min--max ni z-score a todos los modelos, porque LightGBM, XGBoost y CatBoost hacen divisiones basadas en umbrales que no requieren ese escalado.}
+\defiende{No hay que confundir escalar $X$ con transformar el objetivo $y$. La transformación logarítmica de la duración sí se aplicó en todos los modelos.}
+
+\lamina{18}{Logaritmo de la duración}
+\explica{En vez de entrenar directamente con segundos, entrenamos con $z=\ln(1+y)$. La razón es aproximarnos al tipo de error que realmente importa en RMSLE y controlar una distribución fuertemente asimétrica. Una vez que el modelo produce $\widehat z$, calculamos $\exp(\widehat z)-1$ para regresar a segundos, y nos aseguramos de no producir valores negativos.}
+\defiende{Lo que se entrega en el CSV no es $z$; siempre son segundos. Si preguntan por qué sumar uno, es porque evita problemas con cero y coincide con la fórmula RMSLE.}
+
+\lamina{19}{Fuga de información}
+\explica{Todos los parámetros de la preparación que se aprenden, como medianas y escalas, se estimaron únicamente en entrenamiento. El procesamiento de validación y test aplicó esas transformaciones sin volverlas a ajustar. Tampoco generamos variables que incluyan la duración real o información del futuro inexistente en el reto. Finalmente, el holdout no participó en la elección de hiperparámetros.}
+\defiende{La fuga de información suele mejorar una métrica de forma artificial y perjudicar la generalización fuera de la muestra.}
+
+\section{Modelos comparados y selección}
+\lamina{20}{Baseline de mediana y Ridge}
+\explica{Primero medimos un punto de partida. El modelo de mediana, que predice casi lo mismo para todos los viajes, obtuvo 0.795413 RMSLE. Después probamos Ridge con escalado robusto y regularización, reduciendo el valor a 0.462847. Estos modelos muestran que existe información útil, pero todavía hay margen para capturar relaciones más complejas.}
+\defiende{Siempre hay que comparar contra una referencia simple; de otro modo no sabemos si un modelo complejo mejora algo.}
+
+\lamina{21}{Por qué Ridge}
+\explica{Ridge es una regresión lineal que minimiza el error cuadrático junto con una penalización $L_2$ de los coeficientes. Se eligió como comparación lineal regularizada porque hay muchas variables y varias pueden estar correlacionadas. En el notebook el valor de regularización fue $\alpha=100$. Aunque mejora a la mediana, las relaciones entre geografía, horario y duración no son completamente lineales.}
+\defiende{La penalización busca controlar coeficientes excesivos; el escalado robusto importa precisamente porque la magnitud de los coeficientes se penaliza.}
+
+\lamina{22}{Por qué boosting}
+\explica{LightGBM, XGBoost y CatBoost combinan sucesivos árboles de decisión. Cada nuevo árbol contribuye a reducir errores que quedan de la predicción acumulada. Los árboles pueden separar trayectos por condiciones de distancia, zona u hora y así modelar relaciones no lineales. Se evaluaron porque los datos son tabulares, con muchas filas y variables heterogéneas.}
+\defiende{No se eligió un perceptrón solo porque existe en las diapositivas: el perceptrón clásico es un clasificador y no responde directamente a esta regresión continua.}
+
+\lamina{23}{Alternativas probadas}
+\explica{Probamos tres configuraciones de LightGBM, una de XGBoost y una de CatBoost. Son algoritmos de boosting diferentes; compararlos evita quedarnos con una decisión basada en preferencia personal. Todos se ajustaron con el mismo entrenamiento y sus resultados se contrastaron en el mismo conjunto de validación.}
+\defiende{La comparación solo sustenta una conclusión entre los candidatos ensayados. No se realizó una búsqueda exhaustiva de todas las configuraciones posibles.}
+
+\lamina{24}{Hiperparámetros y early stopping}
+\explica{Para LightGBM modificamos la cantidad de árboles, la tasa de aprendizaje, el número de hojas, el mínimo de ejemplos por hoja, la fracción de columnas y filas por árbol y la regularización. El modelo profundo usó 105 hojas, tasa 0.045 y regularización $L_2$ de 5, entre otros ajustes. Se empleó parada temprana con 90 rondas sin mejora cuando correspondía. La variante profunda obtuvo el mejor RMSLE: 0.375735.}
+\defiende{Un modelo más complejo puede sobreajustarse; por ello probamos diferentes grados de regularización y comprobamos el resultado fuera del entrenamiento.}
+
+\lamina{25}{Comparación de resultados}
+\explica{El orden en validación fue: LightGBM profundo 0.375735, equilibrado 0.379249, XGBoost 0.381371, LightGBM regularizado 0.382771 y CatBoost 0.385040. Los cinco superaron Ridge, pero LightGBM profundo fue el menor. Por eso es el ganador entre los modelos efectivamente probados.}
+\defiende{Recuerda que RMSLE se minimiza. Una diferencia como 0.3757 frente a 0.3814 puede parecer pequeña numéricamente, pero se utiliza el mismo criterio en todos los candidatos.}
+
+\lamina{26}{Ensambles o blends}
+\explica{También mezclamos predicciones de los modelos fuertes con distintos pesos, trabajando en escala logarítmica antes de regresar a segundos. Un ensamble puede mejorar cuando los modelos se equivocan de manera diferente. Sin embargo, nuestras combinaciones dieron valores entre 0.375912 y 0.377673, ligeramente peores que el mejor LightGBM solo.}
+\defiende{La regla de elección se mantuvo igual: no escoger la opción más compleja, sino la que logra menor RMSLE en validación.}
+
+\section{Resultados y entrega}
+\lamina{27}{Holdout independiente}
+\explica{Una vez elegido el modelo, por primera vez lo aplicamos a las setenta mil observaciones del holdout. El RMSLE obtenido fue 0.381219, cercano al 0.375735 de validación. También calculamos MAE, RMSE, coeficiente de determinación y MAPE para describir mejor los errores. El holdout no se había usado para ajustar el ganador.}
+\defiende{Que los dos RMSLE sean cercanos es un indicio favorable, pero no garantiza el puntaje de los datos ciegos.}
+
+\lamina{28}{Interpretar métricas complementarias}
+\explica{El MAE fue 270.92 segundos, alrededor de cuatro minutos y medio de error absoluto promedio. El RMSE subió a 3062.55 segundos porque castiga fuertemente las equivocaciones gigantes, que pueden aparecer con duraciones extremas. El $R^2$ fue bajo, 0.039: el modelo explica poca variación en la escala original de segundos. El MAPE fue 25.48\%, aunque porcentajes de error con duraciones casi nulas pueden ser poco estables.}
+\defiende{No se debe ocultar un $R^2$ bajo. Distintas métricas evalúan errores distintos; aquí el concurso establece RMSLE como objetivo de selección.}
+
+\lamina{29}{Diagnóstico de errores}
+\explica{La nube de puntos compara logaritmo de la duración real y estimada; los puntos ideales estarían cerca de la diagonal. La segunda gráfica muestra los errores logarítmicos y permite revisar si predominan sobreestimaciones o subestimaciones. Esto ayuda a comprender qué patrones el modelo todavía no logra capturar.}
+\defiende{Un gráfico de residuos es un diagnóstico; no equivale a probar una causa física del error.}
+
+\lamina{30}{Importancia de variables}
+\explica{Las variables más usadas por el LightGBM incluyen distancia del origen a JFK, seno y coseno de la hora, día del año, distancia del destino a JFK y la interacción hora-distancia. Tiene sentido que aparezcan características de ubicación y hora porque la duración depende de la longitud del trayecto y de las condiciones de circulación.}
+\defiende{La importancia mostrada es una medida interna de uso en árboles, no un efecto causal ni un experimento que identifique cuánto cambia el tiempo al alterar una variable.}
+
+\lamina{31}{Error por distancia}
+\explica{Al separar por distancia, el RMSLE de viajes inferiores a medio kilómetro fue 1.103559, mientras que fue aproximadamente 0.26 a 0.37 en varios intervalos mayores. Es posible que en viajes casi sin desplazamiento influyan más esperas y anomalías, por lo que la distancia explica menos de la duración. Cuatro registros del holdout no entraron en las clases de distancia por GPS inválido.}
+\defiende{Hay solo 76 viajes mayores de 25 kilómetros; su buena métrica aislada no permite conclusiones fuertes sobre esa categoría.}
+
+
+
+\section{Ampliación: geografía, Fourier y Haar}
+
+\lamina{32}{Segunda etapa de optimización}
+\explica{Aunque LightGBM profundo ya superó a las alternativas sencillas, quisimos representar mejor el trazado de Manhattan y las diferencias de duración entre zonas. Se probó una agrupación de lugares, pero varios códigos de zonas producían sobreajuste. Por eso se conservaron variables continuas y señales OOF. El objetivo era comprobar si una representación mejor, no necesariamente más grande, reducía el error.}
+\defiende{Si una variante empeora se debe reportar. El modelo no se elige porque utilice un método sofisticado, sino por la métrica de validación.}
+
+\lamina{33}{Geografía urbana}
+\explica{Calculamos diferencias de latitud y longitud y las aproximamos en kilómetros para distinguir el desplazamiento norte-sur y este-oeste. También utilizamos coordenadas transformadas hacia los ejes principales de Manhattan, más parecidos al trazado vial. Es una aproximación geométrica: no conocemos la ruta seguida por cada taxi.}
+\defiende{No debemos llamar distancia recorrida a Haversine ni al cálculo Manhattan; son predictores derivados de posiciones conocidas.}
+
+\lamina{34}{Promedios OOF geográficos}
+\explica{Una posible variable es la duración histórica promedio de los viajes que salen de una zona y llegan a otra. Esto utiliza trip\_duration, por lo que sería fuga si el promedio incluyera el propio viaje. Dividimos train en cinco folds y construimos cada estadística con los otros cuatro. Para categorías raras usamos suavizado hacia la media global.}
+\defiende{La fórmula de suavizado no elimina por sí sola leakage. Lo que lo evita para una observación es construir su predictor usando folds que no contienen su etiqueta.}
+
+\lamina{35}{Resultados de la optimización geográfica}
+\explica{El LightGBM inicial tenía 0.375735 de RMSLE en validación y 0.381219 en holdout. El ensamble geográfico consiguió 0.374624 y 0.379288. Se trató de una reducción pequeña pero confirmada fuera del entrenamiento. A partir de este resultado surgió una segunda hipótesis: explorar el comportamiento temporal.}
+\defiende{Los valores de validación y holdout no son una puntuación oficial del test ciego. Siempre hay que indicar a qué conjunto corresponde el número.}
+
+\lamina{36}{Por qué emplear Fourier}
+\explica{La demanda de taxis está afectada por el ciclo del día y de la semana. Representar la hora como número puro puede hacer que medianoche aparezca lejana a las 23:59. Las funciones seno y coseno ofrecen componentes periódicos para varios ritmos simultáneos. Un armónico de frecuencia más alta representa cambios más rápidos dentro del periodo.}
+\defiende{Fourier solo transforma información existente. Una periodicidad de demanda no nos dice qué tráfico sufrió un viaje específico.}
+
+\lamina{37}{Qué hace la FFT}
+\explica{Construimos una serie temporal contando viajes iniciados cada media hora en el conjunto de entrenamiento. La transformada discreta de Fourier convierte esa serie en coeficientes por frecuencia. La FFT es el algoritmo eficiente para calcularla. Su espectro permite reconocer ciclos repetidos antes de convertirlos en columnas predictoras.}
+\defiende{El espectro se calculó con conteos, no con valores de trip\_duration de la validación o del test.}
+
+\lamina{38}{Demanda por tiempo}
+\explica{Aquí se observa que el número de taxis cambia de forma muy marcada a lo largo del semestre. Algunos patrones se repiten a escalas de horas y días. Esto respalda que incorporemos contexto temporal; no implica todavía que el modelo final tenga mejor RMSLE.}
+\defiende{Gráficas exploratorias orientan hipótesis, pero el aporte predictivo se decide por la validación.}
+
+\lamina{39}{Espectro de demanda}
+\explica{En el espectro aparecen concentraciones asociadas a periodos próximos a un día y a una semana, además de variaciones a medio día. Los picos reflejan que el proceso no es una sucesión completamente uniforme. Decidimos usar armónicos diarios, semanales y estacionales.}
+\defiende{Un gráfico espectral muestra periodicidades, no demuestra causalidad ni asegura reducción del error.}
+
+\lamina{40}{Las 45 características deterministas}
+\explica{Se añadieron 12 variables de seno/coseno diarias, 14 semanales, 6 estacionales, 5 bases Haar de fase y 8 componentes espaciales de Fourier. En total son 45 columnas nuevas. Se llaman deterministas porque se calculan directamente de fecha y coordenadas sin mirar la variable objetivo.}
+\defiende{Con estas 45, la matriz base de 81 columnas pasa a 126. La ingeniería de variables se justifica por familias y no por contar columnas.}
+
+\lamina{41}{Filtrado por frecuencias}
+\explica{Para distinguir tendencia y oscilaciones de mayor frecuencia, aplicamos filtros sobre coeficientes FFT y luego reconstruimos señales. Se crearon componentes lentos asociados a 12, 48 y 168 horas y bandas obtenidas por diferencias entre reconstrucciones. Cada variable describe la actividad temporal en una escala.}
+\defiende{Los valores de estas señales se estiman usando solo viajes permitidos del entrenamiento. El código contiene los periodos exactos.}
+
+\lamina{42}{Diferencia entre Fourier y wavelets}
+\explica{Fourier detecta ritmos globales de la señal completa. Las wavelets Haar comparan partes locales a diferentes resoluciones; así muestran transiciones abruptas de una franja a la siguiente. Las dos descripciones son complementarias, de modo que puede ser razonable probarlas juntas.}
+\defiende{Haar no predice accidentes ni trayectorias no registradas: solo resume las fluctuaciones observadas.}
+
+\lamina{43}{Modelo matemático Haar}
+\explica{La aproximación A\_s es el promedio de la señal dentro de un bloque de tamaño s. El detalle D\_s mide qué cambió respecto de la aproximación a escala s/2. El sistema utiliza ventanas de tamaños 2, 4, 8, 16, 32 y 64 intervalos; cada intervalo dura media hora. La reconstrucción está implementada manualmente en NumPy.}
+\defiende{Si te preguntan si usaste PyWavelets, la respuesta es no: se implementó la reconstrucción Haar con matrices y promedios NumPy.}
+
+\lamina{44}{Gráfico Haar multiescala}
+\explica{Esta gráfica presenta cómo una señal de conteos puede verse con diferentes grados de detalle. Una aproximación gruesa muestra la tendencia general; el detalle señala cambios que el promedio oculta. Esto explica por qué una media semanal simple y una wavelet no son exactamente el mismo predictor.}
+\defiende{La multirresolución añade representación, no información externa; la mejora solo se confirma en resultados.}
+
+\lamina{45}{27 columnas de demanda regional}
+\explica{Separamos conteos generales, una región aproximada de Manhattan y zonas próximas a aeropuertos. Por cada región se seleccionaron seis variables de Haar y tres de Fourier: 3 por 9 da 27 columnas. Se aplica log1p a conteos normalizados por tamaño de entrenamiento para estabilizar escalas.}
+\defiende{Estas 27 variables proceden de atributos de pickups, no de la duración. Aunque no utilicen etiquetas, se calculan con el train de referencia.}
+
+\lamina{46}{14 columnas espectrales de duración}
+\explica{Aquí usamos la duración real, pero únicamente la de ejemplos habilitados para entrenar cada fold. Creamos una media suavizada de log-duration por media hora de la semana, después obtenemos cinco reconstrucciones FFT, ocho variables Haar y la media suavizada original. Así se crean 14 columnas adicionales.}
+\defiende{Estas sí son estadísticas supervisadas; hay que indicar explícitamente cómo se separaron los folds o el profesor podría interpretar que existe target leakage.}
+
+\lamina{47}{Prueba de exclusión OOF}
+\explica{El codificador forma cinco subconjuntos con semilla 47. Para una fila de un fold, su predictor se estima con los otros cuatro. El notebook hace además una prueba cambiando una sola etiqueta: las propias columnas espectrales OOF de esa fila no cambian. Validación y test se transforman desde un mapa ajustado únicamente con entrenamiento.}
+\defiende{Esta prueba local es una garantía importante sobre la etiqueta propia, pero no prueba que cualquier otro paso del flujo esté libre de fuga.}
+
+\lamina{48}{Inventario de 167 características}
+\explica{El modelo espectral completo reúne 81 variables originales, 45 bases deterministas, 27 variables de demanda y 14 estadísticas espectrales supervisadas. La suma da 167. Para descubrir qué parte funciona, se ajustaron sucesivamente modelos con 126, 153 y 167.}
+\defiende{Comparar incrementos por bloques se llama estudio de ablación: ayuda a atribuir qué familia aporta valor.}
+
+\lamina{49}{Motivos para LightGBM y sus parámetros}
+\explica{Mantuvimos LightGBM por su desempeño previo y su capacidad para aprender interacciones no lineales. Usamos tasa de aprendizaje 0.045, 105 hojas, regularización L2=5 y 1700 árboles como máximo. Se aplicó early stopping en la experimentación de validación. No fue necesario escalar las columnas como en Ridge, porque los árboles separan por umbrales.}
+\defiende{Al reentrenar con todos los datos se fija la configuración; la validación no se usa para seguir eligiendo una vez consultado holdout.}
+
+\lamina{50}{Ablación individual}
+\explica{Esta tabla es decisiva: con solo Fourier/Haar fijo se obtuvo 0.376372; con señales de demanda, 0.376802; y con estadísticas OOF, 0.376833. Todas quedaron por encima de la referencia original 0.375798 de ese experimento. No sería correcto decir que las wavelets individuales mejoraron el puntaje.}
+\defiende{El criterio de selección no debe cambiar según nos convenga; por eso se incluyen los malos resultados.}
+
+\lamina{51}{Fórmula del ensamble}
+\explica{Probamos combinar el modelo geográfico previo con el modelo espectral. Primero mezclamos sus predicciones z en logaritmo; después regresamos a segundos mediante expm1 y recortamos a cero. Trabajar en log es coherente con RMSLE y permite variar qué modelo pesa más en la estimación.}
+\defiende{Los pesos se eligen comparando RMSLE en validación. No se deben reajustar con holdout ni con el test.}
+
+\lamina{52}{Comparación gráfica de modelos}
+\explica{La gráfica muestra el orden de los candidatos espectrales y las combinaciones. Se observó que un modelo espectral aislado podía aportar información complementaria en el ensamble, incluso cuando su puntuación individual era peor. Seleccionamos el menor RMSLE en la tabla completa de validación.}
+\defiende{No toda mejora numérica implica un cambio sustantivo. Aquí es modesta y debe comunicarse como tal.}
+
+\lamina{53}{Ensamble ganador}
+\explica{El mejor peso de validación fue 75 por ciento del ensamble geográfico anterior y 25 por ciento del LightGBM Fourier/Haar con 167 variables. Alcanzó RMSLE 0.373800 frente a 0.374624 del ensamble previo. No elegimos el 25 por ciento de forma arbitraria: salió de comparar pesos en validación.}
+\defiende{El 75/25 se aplica a la predicción transformada, no a la duración en segundos directamente.}
+
+\lamina{54}{Holdout final}
+\explica{Una vez fijado el 75/25 se ejecutó la evaluación reservada de 70 mil observaciones. El RMSLE pasó de 0.379288 a 0.378590. Esto respalda una mejora pequeña en esa evaluación; no permite afirmar que el archivo ciego obtendrá menos que 0.3704, reportado previamente para otro CSV.}
+\defiende{La cifra 0.3704 es externa y no puede compararse directamente con una partición local diferente.}
+
+\lamina{55}{Errores por duración}
+\explica{Solo 103 viajes mayores de 12 horas aportaron alrededor de 24.4 por ciento del error cuadrático logarítmico acumulado en validación. No significa que el problema tenga un límite de 0.20 por razones matemáticas, pero sí muestra que unos pocos casos difíciles pesan mucho. Con el conjunto disponible no conocemos el tráfico ni el camino real.}
+\defiende{Se conservan los extremos de la evaluación. Si se eliminaran para medir RMSLE, el número sería artificialmente optimista.}
+
+\lamina{56}{Alcance de la prevención de fuga}
+\explica{En este concurso usamos una partición aleatoria retrospectiva y excluimos la propia etiqueta con OOF. Esto es correcto respecto a la separación train/valid/test empleada. Para usar el modelo día a día en el futuro, una agregación construida con etiquetas de fechas futuras podría ser inadecuada. Allí usaríamos una partición por fecha y agregaciones de historial pasado únicamente.}
+\defiende{No confundas no usar etiquetas del test con demostrar causalidad temporal; son restricciones relacionadas pero distintas.}
+
+\lamina{57}{Reentrenamiento final}
+\explica{Tras seleccionar arquitectura y pesos, reajustamos con los registros etiquetados utilizables del CSV original. Se excluyeron 984 duraciones mayores de doce horas solo para el ajuste, de modo que quedaron 699016 filas. Se recalcularon las estadísticas OOF y se entrenó el componente espectral sobre 167 columnas. Las duraciones de test permanecieron desconocidas.}
+\defiende{Cuando se reentrena usando train completo, los valores de holdout previamente medidos ya no son un nuevo test del modelo final reentrenado.}
+
+\lamina{58}{Auditoría del CSV}
+\explica{La entrega oficial exige exactamente id y trip\_duration en segundos. El código confirma 100 mil filas, unicidad y orden de identificadores, y que todas las predicciones sean finitas y no negativas. El archivo se escribe sin índice y se vuelve a leer para confirmar que no se modificó el contenido de la entrega.}
+\defiende{No se envían variables extra, predicciones logarítmicas ni identificadores duplicados.}
+
+\lamina{59}{Archivos para reproducir}
+\explica{En el ZIP se incluyen el notebook, los CSV, los scripts originales y los modelos entrenados. features\_taxi define las 81 columnas; wavelet\_fft\_taxi incluye los armónicos, Haar y el codificador; experimento\_wavelets\_fft reproduce variantes; evaluar\_ensambles y evaluar\_holdout documentan la selección; entrenar\_wavelet\_final prepara el envío.}
+\defiende{El guion y la presentación son documentos explicativos; la evidencia de cálculo es el código junto a las tablas de resultados.}
+
+\lamina{60}{Conclusiones}
+\explica{La principal conclusión es metodológica: ganamos precisión acumulando decisiones verificables y descartando lo que no funcionó. Los armónicos y las wavelets fueron útiles finalmente en combinación, no como una sustitución del modelo anterior. Obtuvimos 0.373800 en validación y 0.378590 en holdout, sin afirmar haber llegado a 0.20.}
+\defiende{En investigación aplicada es valioso explicar los resultados negativos, el alcance experimental y lo que aún no sabemos.}
+
+\lamina{61}{Preguntas de defensa}
+\explica{Si preguntan por F1, indica que la salida es continua. Si preguntan por el logaritmo, explica su conexión con RMSLE. Si preguntan por escalado, diferencia Ridge de LightGBM. Si preguntan por OOF, vuelve al diagrama de cinco folds. Y si preguntan por el 0.20, aclara que no fue obtenido.}
+\defiende{El profesor puede valorar más reconocer una limitación real que prometer un número sin medición.}
+
+\lamina{62}{Bibliografía y cierre}
+\explica{La clase aportó el marco supervisado, las transformaciones de variables, la partición, CRISP-DM y la prevención de data leakage. Las fórmulas Fourier, Haar y los ensambles son ampliaciones implementadas y documentadas en los scripts. Termina resumiendo la mejora confirmada y señalando que el test ciego solo se puede calificar en la plataforma.}
+\defiende{Cierra con evidencia reproducible, no con una declaración de superioridad universal del algoritmo.}
+
+
+\section*{Resumen numérico que debes memorizar}
+\begin{center}\small
+\begin{tabular}{p{.60\linewidth}p{.30\linewidth}}
+\toprule
+Métrica o característica & Cifra comprobada\\
+\midrule
+Tamaño train original / test ciego & 700,000 / 100,000\\
+Partición local train / validación / holdout & 80\% / 10\% / 10\%\\
+Valores \texttt{trip\_duration}>12 horas & 984 en train original\\
+Filas para ajuste del modelo final & 699,016\\
+Variables base / deterministas / demanda / supervisadas & 81 / 45 / 27 / 14\\
+Variantes espectrales ajustadas & 126, 153 y 167 variables\\
+Modelo espectral solo con 167 variables (val.) & 0.376833\\
+Ensamble geográfico previo (validación) & 0.374624\\
+Ganador con 75\% geográfico + 25\% espectral (val.) & \textbf{0.373800}\\
+Holdout previo / final & 0.379288 / \textbf{0.378590}\\
+Puntaje reportado anteriormente en plataforma & 0.3704, otro envío\\
+Límite deseado de RMSLE 0.20 & No conseguido\\
+Salida & \texttt{id,trip\_duration}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Preguntas matemáticas para defender}
+\begin{enumerate}
+\item \textbf{¿Qué mide RMSLE?} Es el promedio cuadrático de diferencias de logaritmos de \(1+y\), con raíz al final. Mide errores en escala multiplicativa: se minimiza.
+\item \textbf{¿Qué significa \(\mathcal F\)?} Es una transformación que descompone una serie discreta en coeficientes asociados a distintas frecuencias; \(\mathcal F^{-1}\) reconstruye la serie tras filtrar coeficientes.
+\item \textbf{¿Cuál es la intuición Haar?} La aproximación describe el nivel medio de una señal por bloque y el detalle describe cambios que se pierden al suavizar a una resolución más gruesa.
+\item \textbf{¿Por qué \(\log(1+y)\)?} Porque el concurso usa RMSLE; entrenar una regresión sobre ese objetivo acerca la función cuadrática de entrenamiento a la de evaluación.
+\item \textbf{¿OOF es suficiente para producción?} No necesariamente: una partición aleatoria evita la etiqueta propia, pero una implementación real necesita garantizar que cada predictor use información disponible en el momento del viaje.
+\item \textbf{¿Por qué la combinación puede vencer a sus componentes?} Porque los errores pueden tener covarianza menor que la varianza de cada error individual; el mejor peso no tiene que ser 0 ni 1.
+\end{enumerate}
+
+\section*{Orden de ejecución y referencias}
+En la raíz del proyecto se encuentra \texttt{requirements\_wavelet.txt}. Los scripts de selección requieren recuperar los modelos geográficos previos. Para reproducirlos desde cero, ejecute primero \texttt{\_mejora\_geografia\_v2.py}, después \texttt{experimento\_wavelets\_fft.py}, \texttt{evaluar\_ensambles\_wavelet.py} y \texttt{evaluar\_holdout\_wavelet.py}. Para obtener las predicciones finales se usan \texttt{entrenar\_mejora\_final.py}, \texttt{entrenar\_wavelet\_final.py} y \texttt{predecir\_wavelet\_fft.py}. La metodología se apoya en las tres presentaciones de la asignatura incluidas en \texttt{material\_clase/}; los resultados cuantitativos provienen de los archivos del proyecto.
+\end{document}

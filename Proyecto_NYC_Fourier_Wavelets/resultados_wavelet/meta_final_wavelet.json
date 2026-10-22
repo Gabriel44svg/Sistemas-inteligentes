@@ -1,0 +1,17 @@
+{
+  "modelo": "0.75 ensamble anterior + 0.25 Fourier/Haar",
+  "entrenamiento_filtrado": 699016,
+  "test_filas": 100000,
+  "validacion_rmsle": 0.3738000756174008,
+  "holdout_rmsle": 0.37858959799891406,
+  "rmsle_anterior_validacion": 0.3746240172258088,
+  "rmsle_anterior_holdout": 0.37928817537192905,
+  "pesos": {
+    "ensamble_geografico_anterior": 0.75,
+    "wavelet_fft": 0.25
+  },
+  "n_features_wavelet": 167,
+  "objetivo_de_0_20_alcanzado": false,
+  "nota": "Score 0.3704 de test ciego reportado por usuario no se puede contrastar localmente",
+  "tiempo_entrenamiento_seg": 227.3
+}

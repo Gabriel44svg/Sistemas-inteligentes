@@ -1,0 +1,12 @@
+{
+  "filas_entrenadas": 699016,
+  "test_filas": 100000,
+  "pesos": {
+    "referencia_81": 0.5,
+    "rotacion_mas_oof": 0.5
+  },
+  "rmsle_validacion": 0.3746240172258088,
+  "rmsle_holdout": 0.37928817537192905,
+  "nota": "La métrica de test.csv ciego no se conoce. No está garantizada mejora sobre 0.3704 externo.",
+  "duracion_s": 240.6
+}
