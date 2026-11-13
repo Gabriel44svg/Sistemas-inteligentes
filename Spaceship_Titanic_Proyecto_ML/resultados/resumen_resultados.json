@@ -1,0 +1,27 @@
+{
+  "dataset": {
+    "train": 8693,
+    "test": 4277,
+    "n_features": 50
+  },
+  "selection": {
+    "name": "CatBoost",
+    "threshold": 0.38
+  },
+  "holdout": {
+    "F1": 0.8163481953290871,
+    "Accuracy": 0.8010350776308223,
+    "Precision": 0.7628968253968254,
+    "Recall": 0.8778538812785388,
+    "Especificidad": 0.7230590961761297,
+    "F1_macro": 0.7996421026833641,
+    "BalancedAccuracy": 0.8004564887273342,
+    "ROC_AUC": 0.9070408525003042,
+    "PR_AUC": 0.9205727544896483,
+    "LogLoss": 0.37363692174482066
+  },
+  "versions": {
+    "python": "3.13.5",
+    "pandas": "2.2.3"
+  }
+}

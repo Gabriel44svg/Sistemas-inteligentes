@@ -1,0 +1,14 @@
+﻿,tipo,nulos,porcentaje_nulos,valores_unicos
+PassengerId,object,0,0.0,4277
+HomePlanet,object,87,2.03,3
+CryoSleep,object,93,2.17,2
+Cabin,object,100,2.34,3265
+Destination,object,92,2.15,3
+Age,float64,91,2.13,79
+VIP,object,93,2.17,2
+RoomService,float64,82,1.92,842
+FoodCourt,float64,106,2.48,902
+ShoppingMall,float64,98,2.29,715
+Spa,float64,101,2.36,833
+VRDeck,float64,80,1.87,796
+Name,object,94,2.2,4176
